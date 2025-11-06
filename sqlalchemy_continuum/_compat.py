@@ -234,7 +234,7 @@ def get_column_key(model, column):
             if c.name == column.name and c.table is column.table:
                 return key
     raise sa.orm.exc.UnmappedColumnError(
-        f'No column {column} is configured on mapper {mapper}...'
+        f"No column {column} is configured on mapper {mapper}..."
     )
 
 
@@ -311,21 +311,23 @@ def _get_class_registry(class_):
         except AttributeError:
             # For SQLModel, try _sa_registry (SQLModel uses this)
             try:
-                if hasattr(class_, '_sa_registry'):
+                if hasattr(class_, "_sa_registry"):
                     return class_._sa_registry._class_registry
             except AttributeError:
                 pass
             # For SQLModel/Pydantic models, try to get registry from metadata
             try:
                 # Check if there's a __table__ attribute we can use to access registry
-                if hasattr(class_, '__table__'):
+                if hasattr(class_, "__table__"):
                     # Try to get the registry from the table's metadata
-                    if hasattr(class_.__table__, 'metadata'):
-                        registry_attr = getattr(class_.__table__.metadata, 'info', {}).get('registry')
+                    if hasattr(class_.__table__, "metadata"):
+                        registry_attr = getattr(
+                            class_.__table__.metadata, "info", {}
+                        ).get("registry")
                         if registry_attr is not None:
                             return registry_attr._class_registry
                 # For SQLModel, check for model_registry
-                if hasattr(class_, 'model_registry'):
+                if hasattr(class_, "model_registry"):
                     return class_.model_registry
                 # Last resort: try to get from __mro__ base classes
                 for base in class_.__mro__[1:]:
@@ -352,9 +354,9 @@ if not has_postgres_json:
         """
 
         def get_col_spec(self):
-            return 'json'
+            return "json"
 
-    ischema_names['json'] = PostgresJSONType
+    ischema_names["json"] = PostgresJSONType
 
 
 class JSONType(sa.types.TypeDecorator):
@@ -390,7 +392,7 @@ class JSONType(sa.types.TypeDecorator):
         super().__init__(*args, **kwargs)
 
     def load_dialect_impl(self, dialect):
-        if dialect.name == 'postgresql':
+        if dialect.name == "postgresql":
             # Use the native JSON type.
             if has_postgres_json:
                 return dialect.type_descriptor(JSON())
@@ -400,14 +402,14 @@ class JSONType(sa.types.TypeDecorator):
             return dialect.type_descriptor(self.impl)
 
     def process_bind_param(self, value, dialect):
-        if dialect.name == 'postgresql' and has_postgres_json:
+        if dialect.name == "postgresql" and has_postgres_json:
             return value
         if value is not None:
             value = json.dumps(value)
         return value
 
     def process_result_value(self, value, dialect):
-        if dialect.name == 'postgresql':
+        if dialect.name == "postgresql":
             return value
         if value is not None:
             value = json.loads(value)
@@ -439,7 +441,7 @@ class GenericAttributeImpl(attributes.ScalarAttributeImpl):
         Setting None as default_function here.
         """
         # Adjust for SQLAlchemy version change
-        sqlalchemy_version = tuple(map(int, sa.__version__.split('.')))
+        sqlalchemy_version = tuple(map(int, sa.__version__.split(".")))
         if sqlalchemy_version >= (2, 0, 22):
             args = (*args[:2], None, *args[2:])
 
@@ -568,7 +570,7 @@ class GenericRelationshipProperty(MapperProperty):
         self.discriminator = self._column_to_property(self._discriminator_col)
 
         if self.discriminator is None:
-            raise ImproperlyConfigured('Could not find discriminator descriptor.')
+            raise ImproperlyConfigured("Could not find discriminator descriptor.")
 
         self.id = list(map(self._column_to_property, self._id_cols))
 
