@@ -7,7 +7,7 @@ name = "SQLAlchemy-Continuum"
 version = "1.5.2"
 description = "Versioning and auditing extension for SQLAlchemy."
 readme = "README.rst"
-license = "BSD-3-Clause"
+license = {file = "LICENSE"}
 authors = [
     {name = "Konsta Vesterinen", email = "konsta@fastmonkeys.com"},
     {name = "Mark Steward"},
