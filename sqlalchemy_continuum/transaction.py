@@ -5,6 +5,7 @@ import sys
 import sqlalchemy as sa
 from sqlalchemy.ext.compiler import compiles
 
+from ._compat import _get_class_registry
 from .dialects.postgresql import (
     CreateTemporaryTransactionTableSQL,
     InsertTemporaryTransactionSQL,
@@ -154,7 +155,7 @@ class TransactionFactory(ModelFactory):
             if manager.user_cls:
                 user_cls = manager.user_cls
                 Base = declarative_base_resolver(manager.declarative_base)
-                registry = Base.registry._class_registry
+                registry = _get_class_registry(Base)
 
                 if isinstance(user_cls, str):
                     try:

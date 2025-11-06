@@ -300,12 +300,43 @@ def has_changes(obj, attrs=None, exclude=None):
 def _get_class_registry(class_):
     """
     Helper function to get the class registry for SQLAlchemy models.
-    Handles differences between SQLAlchemy versions.
+    Handles differences between SQLAlchemy versions and SQLModel/Pydantic models.
     """
     try:
         return class_.registry._class_registry
-    except AttributeError:  # SQLAlchemy <1.4
-        return class_._decl_class_registry
+    except AttributeError:
+        # Try SQLAlchemy <1.4
+        try:
+            return class_._decl_class_registry
+        except AttributeError:
+            # For SQLModel, try _sa_registry (SQLModel uses this)
+            try:
+                if hasattr(class_, '_sa_registry'):
+                    return class_._sa_registry._class_registry
+            except AttributeError:
+                pass
+            # For SQLModel/Pydantic models, try to get registry from metadata
+            try:
+                # Check if there's a __table__ attribute we can use to access registry
+                if hasattr(class_, '__table__'):
+                    # Try to get the registry from the table's metadata
+                    if hasattr(class_.__table__, 'metadata'):
+                        registry_attr = getattr(class_.__table__.metadata, 'info', {}).get('registry')
+                        if registry_attr is not None:
+                            return registry_attr._class_registry
+                # For SQLModel, check for model_registry
+                if hasattr(class_, 'model_registry'):
+                    return class_.model_registry
+                # Last resort: try to get from __mro__ base classes
+                for base in class_.__mro__[1:]:
+                    try:
+                        return _get_class_registry(base)
+                    except (AttributeError, RecursionError):
+                        continue
+            except (AttributeError, RecursionError):
+                pass
+            # If all else fails, return an empty dict to avoid breaking
+            return {}
 
 
 # ==============================================================================
